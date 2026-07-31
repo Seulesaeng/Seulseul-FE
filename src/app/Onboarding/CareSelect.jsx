@@ -45,15 +45,11 @@ function CareSelect() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col px-5 pt-16 pb-8">
-      <button type="button" onClick={() => navigate(-1)}>
-        <IcBack className="text-gray90 h-6 w-6" />
-      </button>
+    <div className="flex min-h-screen flex-col px-6 pt-9 pb-8">
+      <h1 className="text-title2 text-gray90">어떤 관리를 받고 계세요?</h1>
+      <p className="text-body4 text-gray60">받고 계신 걸 모두 골라주세요</p>
 
-      <h1 className="text-title2 text-gray90 mt-6">어떤 관리를 받고 계세요?</h1>
-      <p className="text-caption1 text-gray60 mt-2">받고 계신 걸 모두 골라주세요</p>
-
-      <div className="mt-8 grid grid-cols-5 gap-x-3 gap-y-5">
+      <div className="mt-9.5 grid grid-cols-5 gap-x-1.5 gap-y-3">
         {CARE_OPTIONS.map(({ key, label, Icon }) => {
           const isSelected = selected.includes(key)
           return (
@@ -64,13 +60,13 @@ function CareSelect() {
               className="flex flex-col items-center gap-2"
             >
               <span
-                className={`flex h-14 w-14 items-center justify-center rounded-2xl border ${
+                className={`flex h-16.5 w-16.5 items-center justify-center rounded-[14px] border ${
                   isSelected
                     ? 'bg-orange10 border-orange50 text-orange50'
                     : 'bg-gray10 border-transparent text-gray60'
                 }`}
               >
-                <Icon className="h-6 w-6" />
+                <Icon className="h-7 w-7" />
               </span>
               <span className={`text-body6 ${isSelected ? 'text-orange50' : 'text-gray60'}`}>
                 {label}
@@ -80,15 +76,15 @@ function CareSelect() {
         })}
 
         <button type="button" className="flex flex-col items-center gap-2">
-          <span className="bg-gray10 text-gray60 flex h-14 w-14 items-center justify-center rounded-2xl">
-            <IcAdd className="h-6 w-6" />
+          <span className="bg-gray10 text-gray60 flex h-16.5 w-16.5 items-center justify-center rounded-[14px]">
+            <IcAdd className="h-7 w-7" />
           </span>
           <span className="text-body6 text-gray60">직접추가</span>
         </button>
       </div>
 
-      <p className="text-body6 text-gray60 mt-6 text-center">
-        <span className="text-orange50">{selected.length}개 선택</span> · 무료는 {FREE_LIMIT}
+      <p className="text-body6 text-gray60 mt-6.5 text-center">
+        <span className="text-orange50 font-bold">{selected.length}</span>개 선택 · 무료는 {FREE_LIMIT}
         개까지
       </p>
 
