@@ -7,6 +7,8 @@ import CareSelect from './app/Onboarding/CareSelect'
 import Permission from './app/Onboarding/Permission'
 import Scanning from './app/Onboarding/Scanning'
 import ScanResult from './app/Onboarding/ScanResult'
+import JudgementProcess from '@/app/JudgementProcess'
+import Scheduling from '@/app/Scheduling'
 import ReserveComplete from '@/app/ReserveComplete'
 
 function App() {
@@ -18,6 +20,8 @@ function App() {
       <Route path="/onboarding/permission" element={<Permission />} />
       <Route path="/onboarding/scanning" element={<Scanning />} />
       <Route path="/onboarding/scan-result" element={<ScanResult />} />
+      <Route path="/judgement-process" element={<JudgementProcess />} />
+      <Route path="/scheduling" element={<Scheduling />} />
       <Route path="/chat" element={<Chat />} />
       <Route path="/reserve-complete" element={<ReserveComplete />} />
       <Route path="/my" element={<My />} />

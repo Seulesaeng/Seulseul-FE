@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import bannerBg from '@/assets/images/img_banner_background.png'
 import IcList from '@/assets/icons/ic_list_24.svg?react'
 import IcProfile from '@/assets/icons/ic_profile_24.svg?react'
@@ -94,6 +95,7 @@ function EventDot({ type }) {
 }
 
 function Home() {
+  const navigate = useNavigate()
   const [mode, setMode] = useState('week')
   const monthCells = getMonthMatrix(2026, 7)
 
@@ -280,7 +282,11 @@ function Home() {
         </div>
       </div>
 
-      <div className="border-orange50 mx-5 mt-4 rounded-2xl border p-4">
+      <button
+        type="button"
+        onClick={() => navigate('/judgement-process')}
+        className="border-orange50 mx-5 mt-4 block w-[calc(100%-2.5rem)] rounded-2xl border p-4 text-left"
+      >
         <div className="flex items-center justify-between">
           <p className="text-caption3 text-orange50 flex items-center gap-1.5">
             <span className="bg-orange50 h-1.5 w-1.5 rounded-full" />
@@ -294,9 +300,13 @@ function Home() {
           어제 사진 기준 · 자란 길이 <span className="text-orange50 font-semibold">2.8mm</span>
         </p>
         <p className="text-caption2 text-orange50 mt-3">슬슬이 어떻게 판단했는지 보기 →</p>
-      </div>
+      </button>
 
-      <div className="border-gray30 mx-5 mt-3 rounded-2xl border p-4">
+      <button
+        type="button"
+        onClick={() => navigate('/scheduling')}
+        className="border-gray30 mx-5 mt-3 block w-[calc(100%-2.5rem)] rounded-2xl border p-4 text-left"
+      >
         <p className="text-caption3 text-gray60 flex items-center gap-1.5">
           <IcCircle className="h-3.5 w-3.5 shrink-0" />
           일정에서 거꾸로 계산했어요
@@ -307,7 +317,7 @@ function Home() {
           <span className="text-orange50 font-semibold">8/11</span>
         </p>
         <p className="text-caption2 text-orange50 mt-3">두 개 한번에 잡기 →</p>
-      </div>
+      </button>
     </div>
   )
 }
