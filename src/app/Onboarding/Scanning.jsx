@@ -44,12 +44,12 @@ function Scanning() {
   }, [isDone, navigate])
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-6 px-5">
-      <div className="grid grid-cols-4 gap-2">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-5 px-21">
+      <div className="grid grid-cols-4 gap-1">
         {Array.from({ length: TOTAL_CELLS }).map((_, index) => (
           <div
             key={index}
-            className={`h-12 w-12 rounded-lg transition-colors duration-300 ${
+            className={`h-13.75 w-13.75 rounded-sm transition-colors duration-300 ${
               activeCells.includes(index) ? 'bg-orange50' : 'bg-gray10'
             }`}
           />
@@ -57,8 +57,8 @@ function Scanning() {
       </div>
 
       <div className="text-center">
-        <p className="text-body3 text-gray90">사진첩을 살펴보고 있어요</p>
-        <p className="text-caption2 text-gray60 mt-1">기기 안에서만 처리됩니다</p>
+        <p className="text-title3 text-gray90">사진첩을 살펴보고 있어요</p>
+        <p className="text-body3 text-gray60 mt-5">기기 안에서만 처리됩니다</p>
       </div>
     </div>
   )
