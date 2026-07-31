@@ -1,93 +1,103 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import LongButton from '@/components/button/LongButton'
 import IcBack from '@/assets/icons/ic_back_24.svg?react'
 import IcAdd from '@/assets/icons/ic_add_24.svg?react'
+import api from '@/lib/axios'
+import { useFlow } from '@/context/FlowContext'
+import ErrorBanner from '@/components/ErrorBanner'
+import { formatMonthDay } from '@/lib/date'
 
-const STEPS = [
-  {
-    key: 'gallery',
-    title: '사진첩 훑기',
-    summary: (
-      <>
-        최근 7일 사진 <span className="text-gray90 font-semibold">34장</span> 중{' '}
-        <span className="text-gray90 font-semibold">6장</span> 선별
-      </>
-    ),
-    detail: '손톱이 선명하게 보이는 사진만 남겼어요',
-  },
-  {
-    key: 'state',
-    title: '상태 측정',
-    summary: (
-      <>
-        자란 길이 <span className="text-gray90 font-semibold">2.8mm</span>
-      </>
-    ),
-    detail: (
-      <div className="mt-3 flex flex-col gap-2">
-        <span className="bg-orange10 text-orange60 w-fit rounded-md px-2 py-1 font-mono text-[11px]">
-          analyze_nail_growth()
-        </span>
-        <div className="bg-gray10 rounded-xl p-3">
-          <p className="text-caption2 text-gray90">큐티클 라인 노출 확인 · 우측 약지 들뜸</p>
-          <p className="text-caption3 text-gray60 mt-1">
-            신뢰도 <span className="text-gray90 font-semibold">87%</span>
-          </p>
-        </div>
-      </div>
-    ),
-  },
-  {
-    key: 'history',
-    title: '기록과 대조',
-    summary: (
-      <>
-        평소보다 <span className="text-gray90 font-semibold">18%</span> 빠름
-      </>
-    ),
-    detail: '최근 3회 시술 간격 평균과 비교했어요',
-  },
-  {
-    key: 'cycle',
-    title: '주기 재계산',
-    summary: (
-      <>
-        <span className="text-gray90 font-semibold">26일</span> →{' '}
-        <span className="text-gray90 font-semibold">21일</span>로 보정
-      </>
-    ),
-    detail: '성장 속도를 반영해 다음 주기를 앞당겼어요',
-  },
-  {
-    key: 'calendar',
-    title: '일정 확인 후 역산',
-    summary: (
-      <>
-        Google 캘린더의 <span className="text-gray90 font-semibold">8/15 결혼식</span> →{' '}
-        <span className="text-gray90 font-semibold">8/12~13</span>이 최적
-      </>
-    ),
-    detail: '결혼식 2~3일 전이 가장 깔끔한 타이밍이에요',
-  },
-  {
-    key: 'slot',
-    title: '슬롯 대조',
-    summary: (
-      <>
-        후보 <span className="text-gray90 font-semibold">3개</span> 선정
-      </>
-    ),
-    detail: '샵 영업시간과 회원님 일정이 겹치는 시간만 골랐어요',
-  },
-]
+const EVIDENCE_STEP_TITLES = {
+  1: '사진첩 훑기',
+  2: '상태 측정',
+  3: '주기 계산',
+  4: '관리 시점 판단',
+  5: '일정 확인',
+  6: '역방향 일정 계산',
+}
+
+function ResultPreview({ result }) {
+  if (!result) return null
+  return (
+    <div className="bg-gray10 mt-3 rounded-xl p-3">
+      {Object.entries(result).map(([key, value]) => (
+        <p key={key} className="text-caption3 text-gray70 font-mono">
+          <span className="text-gray50">{key}</span>{' '}
+          {Array.isArray(value) ? value.join(', ') : String(value)}
+        </p>
+      ))}
+    </div>
+  )
+}
 
 function JudgementProcess() {
   const navigate = useNavigate()
-  const [expandedKey, setExpandedKey] = useState('state')
+  const { analysisId, analysis, schedule, patch } = useFlow()
+  const [expandedKey, setExpandedKey] = useState('step-2')
+  const [error, setError] = useState(null)
+  const [loadingSchedule, setLoadingSchedule] = useState(false)
+  const [attempt, setAttempt] = useState(0)
 
-  const toggleStep = (key) => {
-    setExpandedKey((prev) => (prev === key ? null : key))
+  // "슬롯 대조" 단계를 보여주기 위해 예약 후보를 미리 한 번 조회해 컨텍스트에 저장해 둔다.
+  // AgentChat은 이 결과를 다시 불러오지 않고 그대로 재사용한다.
+  useEffect(() => {
+    if (!analysisId || !analysis?.canSchedule || schedule) return undefined
+    let cancelled = false
+    setLoadingSchedule(true)
+    setError(null)
+
+    api
+      .post(`/api/analyses/${analysisId}/schedule`, {})
+      .then(({ data }) => {
+        if (cancelled) return
+        patch({ schedule: data })
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setError(err)
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingSchedule(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [analysisId, attempt])
+
+  const steps = useMemo(() => {
+    const evidenceSteps = (analysis?.evidenceLogs ?? []).map((log) => ({
+      key: `step-${log.step}`,
+      title: EVIDENCE_STEP_TITLES[log.step] ?? `단계 ${log.step}`,
+      summary: log.message,
+      result: log.result,
+    }))
+
+    if (schedule) {
+      evidenceSteps.push({
+        key: 'step-schedule',
+        title: '슬롯 대조',
+        summary: `예약 후보 ${schedule.candidates.length}개 선정`,
+        result: {
+          제외된슬롯: schedule.excludedSlots.length,
+          agentMode: schedule.agentMode,
+        },
+      })
+    }
+    return evidenceSteps
+  }, [analysis, schedule])
+
+  if (!analysis) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-5">
+        <ErrorBanner error={{ message: '분석 데이터를 찾을 수 없어요. 홈으로 돌아가 다시 시도해주세요.' }} />
+        <button type="button" onClick={() => navigate('/home')} className="text-body6 text-gray60">
+          홈으로
+        </button>
+      </div>
+    )
   }
 
   return (
@@ -103,14 +113,25 @@ function JudgementProcess() {
         AGENT REASONING
       </p>
       <h2 className="text-title2 text-gray90 mt-2">
-        네일을 <span className="text-orange50">8월 12일</span>에 받으시는 게 좋겠어요
+        {analysis.reversePlan ? (
+          <>
+            네일을 <span className="text-orange50">{formatMonthDay(analysis.reversePlan.recommendedStart)}</span>
+            에 받으시는 게 좋겠어요
+          </>
+        ) : (
+          analysis.careStatus.message
+        )}
       </h2>
       <p className="text-caption1 text-gray60 mt-2">
-        6단계를 거쳤어요 · 각 단계를 눌러 근거를 볼 수 있어요
+        {steps.length}단계를 거쳤어요 · 각 단계를 눌러 근거를 볼 수 있어요
       </p>
 
+      {error && (
+        <ErrorBanner error={error} onRetry={() => setAttempt((prev) => prev + 1)} className="mt-4" />
+      )}
+
       <div className="mt-6 flex flex-col gap-5">
-        {STEPS.map(({ key, title, summary, detail }, index) => {
+        {steps.map(({ key, title, summary, result }, index) => {
           const isExpanded = expandedKey === key
           return (
             <div
@@ -119,7 +140,7 @@ function JudgementProcess() {
             >
               <button
                 type="button"
-                onClick={() => toggleStep(key)}
+                onClick={() => setExpandedKey((prev) => (prev === key ? null : key))}
                 className="flex w-full items-center gap-3 text-left"
               >
                 <span
@@ -140,21 +161,28 @@ function JudgementProcess() {
                 />
               </button>
 
-              {isExpanded && detail}
+              {isExpanded && <ResultPreview result={result} />}
             </div>
           )
         })}
+
+        {loadingSchedule && (
+          <p className="text-caption2 text-gray60 text-center">예약 후보를 찾는 중이에요…</p>
+        )}
       </div>
 
-      <div className="bg-gray10 mt-4 rounded-2xl p-4">
-        <p className="text-caption2 text-gray60">
-          확실치 않은 게 하나 있어요. 8/9 사진이 실내 조명이라 색이 정확하지 않았어요.
-          뿌리염색은 좀 더 지켜보고 말씀드릴게요.
-        </p>
-      </div>
+      {(analysis.changeSignal.visionFailed || analysis.changeSignal.confidence === 'LOW') && (
+        <div className="bg-gray10 mt-4 rounded-2xl p-4">
+          <p className="text-caption2 text-gray60">
+            {analysis.fallbackReason ?? '이번 판단은 신뢰도가 낮아 다음 사진에서 다시 확인할게요.'}
+          </p>
+        </div>
+      )}
 
       <div className="mt-auto pt-8">
-        <LongButton onClick={() => navigate('/agent-chat')}>그럼 예약 잡아줘</LongButton>
+        <LongButton disabled={!schedule} onClick={() => navigate('/agent-chat')}>
+          그럼 예약 잡아줘
+        </LongButton>
       </div>
     </div>
   )

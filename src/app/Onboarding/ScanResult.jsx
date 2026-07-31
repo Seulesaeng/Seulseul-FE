@@ -4,24 +4,31 @@ import IcNail from '@/assets/icons/ic_nail_24.svg?react'
 import IcDye from '@/assets/icons/ic_dye_24.svg?react'
 import IcLash from '@/assets/icons/ic_lash_24.svg?react'
 import IcRoundedCheck from '@/assets/icons/ic_rounded_check_24.svg?react'
+import { useFlow } from '@/context/FlowContext'
+import { formatMonthDay } from '@/lib/date'
 
-const FOUND_CARES = [
-  {
-    key: 'nail',
-    Icon: IcNail,
-    title: '네일',
-    description: '가장 최근 네일 상태를 찾았어요 · 8월 9일 사진',
-  },
-  {
-    key: 'dye',
-    Icon: IcDye,
-    title: '뿌리염색',
-    description: '가장 최근 머리 길이를 찾았어요 · 8월 7일 사진',
-  },
-]
+// 염색은 아직 API가 다루지 않는 목업 카드
+const MOCK_DYE_CARE = {
+  key: 'dye',
+  Icon: IcDye,
+  title: '뿌리염색',
+  description: '가장 최근 머리 길이를 찾았어요 · 8월 7일 사진',
+}
 
 function ScanResult() {
   const navigate = useNavigate()
+  const { analysis } = useFlow()
+
+  const latestPhoto = analysis?.selectedPhotos?.at(-1)
+  const nailCare = {
+    key: 'nail',
+    Icon: IcNail,
+    title: '네일',
+    description: latestPhoto
+      ? `가장 최근 네일 상태를 찾았어요 · ${formatMonthDay(latestPhoto.takenAt)} 사진`
+      : '가장 최근 네일 상태를 찾았어요',
+  }
+  const foundCares = [nailCare, MOCK_DYE_CARE]
 
   return (
     <div className="flex min-h-screen flex-col px-6 pt-8 pb-10.5">
@@ -31,7 +38,7 @@ function ScanResult() {
       <section className="mt-8">
         <h2 className="text-body5 text-gray60 mb-2">사진에서 찾았어요</h2>
         <div className="flex flex-col gap-2">
-          {FOUND_CARES.map(({ key, Icon, title, description }) => (
+          {foundCares.map(({ key, Icon, title, description }) => (
             <div
               key={key}
               className="flex items-center gap-3.5 px-4 py-3.5"

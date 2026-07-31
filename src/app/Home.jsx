@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import bannerBg from '@/assets/images/img_banner_background.png'
 import IcList from '@/assets/icons/ic_list_24.svg?react'
@@ -12,6 +12,10 @@ import IcLash from '@/assets/icons/ic_lash_24.svg?react'
 import IcPin from '@/assets/icons/ic_pin_24.svg?react'
 import IcCamera from '@/assets/icons/ic_camera_24.svg?react'
 import IcCircle from '@/assets/icons/ic_circle_24.svg?react'
+import api from '@/lib/axios'
+import { useFlow } from '@/context/FlowContext'
+import ErrorBanner from '@/components/ErrorBanner'
+import { formatDateRangeShort, formatShortDate, formatTime } from '@/lib/date'
 
 const WEEKDAY_LABELS = ['월', '화', '수', '목', '금', '토', '일']
 
@@ -20,16 +24,8 @@ const WEEK_DAYS = [10, 11, 12, 13, 14, 15, 16]
 const EVENT_DAYS = { 15: 'personal', 16: 'reservation' }
 const TODAY = 10
 
-const CARE_ITEMS = [
-  {
-    key: 'nail',
-    Icon: IcNail,
-    title: '네일',
-    status: '지금',
-    statusTone: 'urgent',
-    location: '프리즘네일 홍대 · 22일 전',
-    description: '어제 사진 기준 · 2.8mm',
-  },
+// 염색/속눈썹은 아직 API가 다루지 않는 목업 카드
+const MOCK_CARE_ITEMS = [
   {
     key: 'dye',
     Icon: IcDye,
@@ -68,6 +64,9 @@ const STATUS_BADGE_CLASS = {
   later: 'bg-gray30 text-gray60',
 }
 
+const CARE_STATUS_TEXT = { NOW: '지금', SOON: '슬슬', FRESH: '아직' }
+const CARE_STATUS_TONE = { NOW: 'urgent', SOON: 'soon', FRESH: 'later' }
+
 function getMonthMatrix(year, monthIndex) {
   const firstWeekday = new Date(year, monthIndex, 1).getDay()
   const daysInMonth = new Date(year, monthIndex + 1, 0).getDate()
@@ -97,6 +96,55 @@ function Home() {
   const navigate = useNavigate()
   const [mode, setMode] = useState('week')
   const monthCells = getMonthMatrix(2026, 7)
+  const { albumId, analysis, patch } = useFlow()
+  const [loading, setLoading] = useState(!analysis)
+  const [error, setError] = useState(null)
+  const [attempt, setAttempt] = useState(0)
+
+  // 온보딩 없이 /home으로 바로 들어온 경우(새로고침 등) 대비: 컨텍스트가 비어 있으면 조용히 채워 넣는다.
+  useEffect(() => {
+    if (analysis) {
+      setLoading(false)
+      return undefined
+    }
+    let cancelled = false
+    setLoading(true)
+    setError(null)
+
+    async function load() {
+      try {
+        const resolvedAlbumId =
+          albumId ?? (await api.post('/api/albums/connect', { source: 'DEMO' })).data.albumId
+        const { data: analysisRes } = await api.post('/api/analyses', {
+          albumId: resolvedAlbumId,
+        })
+        if (cancelled) return
+        patch({ albumId: resolvedAlbumId, analysisId: analysisRes.analysisId, analysis: analysisRes })
+      } catch (err) {
+        if (cancelled) return
+        setError(err)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    load()
+
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [attempt])
+
+  const nailCare = analysis && {
+    key: 'nail',
+    Icon: IcNail,
+    title: '네일',
+    status: CARE_STATUS_TEXT[analysis.careStatus.status],
+    statusTone: CARE_STATUS_TONE[analysis.careStatus.status],
+    location: `마지막 관리 후 ${analysis.timing.daysSinceLastService}일`,
+    description: analysis.careStatus.message,
+  }
+  const careItems = [nailCare, ...MOCK_CARE_ITEMS].filter(Boolean)
 
   return (
     <div className="min-h-screen pb-10">
@@ -133,17 +181,13 @@ function Home() {
         <span className="bg-orange10 text-caption2 font-semibold text-orange70 absolute right-4 bottom-3.5 px-2.5 py-1 rounded-full">1/2</span>
       </div>
 
-      <div className="bg-orange10 mx-6 my-5 rounded-[10px] p-3">
-        <p className="text-caption2 font-bold text-orange70 flex items-center gap-2">
-          <span className="bg-orange50 h-2 w-2 shrink-0 rounded-full" />
-          밤사이 사진 34장을 확인했어요 · 03:12
-        </p>
-      </div>
+      {error && <ErrorBanner error={error} onRetry={() => setAttempt((prev) => prev + 1)} className="mx-6 mb-4" />}
 
       <div className="px-6">
         <h1 className="text-title3 font-extrabold text-gray90">안녕하세요, 화연님</h1>
         <p className="text-body2 text-gray60 mt-0.5">
-          오늘 예약하면 좋을 관리가 <span className="text-orange50 text-body1">1개</span>{' '}
+          오늘 예약하면 좋을 관리가{' '}
+          <span className="text-orange50 text-body1">{analysis?.canSchedule ? '1개' : '0개'}</span>{' '}
           있어요
         </p>
       </div>
@@ -235,7 +279,13 @@ function Home() {
       <div className="mt-6 px-5">
         <h2 className="text-body3 text-gray90 mb-3">지금 하고 있는 관리</h2>
         <div className="flex flex-col gap-2">
-          {CARE_ITEMS.map(
+          {loading && !analysis && (
+            <div className="border-gray30 rounded-2xl border p-3 text-center">
+              <p className="text-caption2 text-gray60">네일 상태를 불러오는 중이에요…</p>
+            </div>
+          )}
+
+          {careItems.map(
             ({ key, Icon, title, status, statusTone, location, description }) => (
               <div
                 key={key}
@@ -280,42 +330,53 @@ function Home() {
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={() => navigate('/judgement-process')}
-        className="border-orange50 mx-5 mt-4 block w-[calc(100%-2.5rem)] rounded-2xl border p-4 text-left"
-      >
-        <div className="flex items-center justify-between">
-          <p className="text-caption3 text-orange50 flex items-center gap-1.5">
-            <span className="bg-orange50 h-1.5 w-1.5 rounded-full" />
-            방금 감지했어요
+      {analysis?.canSchedule && (
+        <button
+          type="button"
+          onClick={() => navigate('/judgement-process')}
+          className="border-orange50 mx-5 mt-4 block w-[calc(100%-2.5rem)] rounded-2xl border p-4 text-left"
+        >
+          <div className="flex items-center justify-between">
+            <p className="text-caption3 text-orange50 flex items-center gap-1.5">
+              <span className="bg-orange50 h-1.5 w-1.5 rounded-full" />
+              방금 감지했어요
+            </p>
+            <span className="text-caption3 text-gray50">{formatTime(analysis.careStatus.decidedAt)}</span>
+          </div>
+          <p className="text-body3 text-gray90 mt-2">{analysis.careStatus.message}</p>
+          <p className="text-caption2 text-gray60 mt-1 flex items-center gap-1">
+            <IcCamera className="h-3.5 w-3.5 shrink-0" />
+            {analysis.changeSignal.reason}
           </p>
-          <span className="text-caption3 text-gray50">03:12</span>
-        </div>
-        <p className="text-body3 text-gray90 mt-2">네일이 꽤 자랐어요</p>
-        <p className="text-caption2 text-gray60 mt-1 flex items-center gap-1">
-          <IcCamera className="h-3.5 w-3.5 shrink-0" />
-          어제 사진 기준 · 자란 길이 <span className="text-orange50 font-semibold">2.8mm</span>
-        </p>
-        <p className="text-caption2 text-orange50 mt-3">슬슬이 어떻게 판단했는지 보기 →</p>
-      </button>
+          <p className="text-caption2 text-orange50 mt-3">슬슬이 어떻게 판단했는지 보기 →</p>
+        </button>
+      )}
 
-      <button
-        type="button"
-        onClick={() => navigate('/scheduling')}
-        className="border-gray30 mx-5 mt-3 block w-[calc(100%-2.5rem)] rounded-2xl border p-4 text-left"
-      >
-        <p className="text-caption3 text-gray60 flex items-center gap-1.5">
-          <IcCircle className="h-3.5 w-3.5 shrink-0" />
-          일정에서 거꾸로 계산했어요
-        </p>
-        <p className="text-body3 text-gray90 mt-2">8월 15일 친구 결혼식</p>
-        <p className="text-caption2 text-gray60 mt-1">
-          네일 <span className="text-orange50 font-semibold">8/12~13</span> · 뿌리염색{' '}
-          <span className="text-orange50 font-semibold">8/11</span>
-        </p>
-        <p className="text-caption2 text-orange50 mt-3">두 개 한번에 잡기 →</p>
-      </button>
+      {analysis?.reversePlan && (
+        <button
+          type="button"
+          onClick={() => navigate('/scheduling')}
+          className="border-gray30 mx-5 mt-3 block w-[calc(100%-2.5rem)] rounded-2xl border p-4 text-left"
+        >
+          <p className="text-caption3 text-gray60 flex items-center gap-1.5">
+            <IcCircle className="h-3.5 w-3.5 shrink-0" />
+            일정에서 거꾸로 계산했어요
+          </p>
+          <p className="text-body3 text-gray90 mt-2">
+            {analysis.upcomingEvent
+              ? `${formatShortDate(analysis.upcomingEvent.date).replace('/', '월 ')}일 ${analysis.upcomingEvent.title}`
+              : '다가오는 관리 주기 기준 추천 일정'}
+          </p>
+          <p className="text-caption2 text-gray60 mt-1">
+            네일{' '}
+            <span className="text-orange50 font-semibold">
+              {formatDateRangeShort(analysis.reversePlan.recommendedStart, analysis.reversePlan.recommendedEnd)}
+            </span>{' '}
+            · 뿌리염색 <span className="text-orange50 font-semibold">8/11</span>
+          </p>
+          <p className="text-caption2 text-orange50 mt-3">두 개 한번에 잡기 →</p>
+        </button>
+      )}
     </div>
   )
 }

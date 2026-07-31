@@ -6,45 +6,13 @@ import IcStar from '@/assets/icons/ic_star_24.svg?react'
 import IcPin from '@/assets/icons/ic_pin_24.svg?react'
 import IcClock from '@/assets/icons/ic_clock_24.svg?react'
 import IcCheck from '@/assets/icons/ic_check_bold_24.svg?react'
+import api from '@/lib/axios'
+import { useFlow } from '@/context/FlowContext'
+import ErrorBanner from '@/components/ErrorBanner'
+import { formatDateRangeShort, formatDateTimeKR, formatMonthDay } from '@/lib/date'
 
 const BLOCKS = ['intro', 'reasoning', 'offer', 'candidates', 'note']
-
-const REASONING_LINES = [
-  { fn: 'google_calendar.list_events()', result: '8/12 19시 이후 비어 있음' },
-  { fn: 'search_shops(nail, 홍대)', result: '후보 7곳' },
-  { fn: 'filter(단골 우선)', result: '프리즘네일 4회 방문 기록' },
-  { fn: 'cross(빈시간 × 예약가능)', result: '3개로 좁힘' },
-]
-
-const CANDIDATES = [
-  {
-    id: 'a',
-    Icon: IcStar,
-    shop: '프리즘네일 홍대',
-    service: '젤네일',
-    price: '45,000원',
-    datetime: '8/12 (수) 19:00',
-    note: '결혼식 D-3 · 화연님이 4번 가신 곳',
-  },
-  {
-    id: 'b',
-    Icon: IcPin,
-    shop: '무드네일 합정',
-    service: '젤네일',
-    price: '42,000원',
-    datetime: '8/13 (목) 20:00',
-    note: '회사에서 10분 · 그날 야근 없으세요',
-  },
-  {
-    id: 'c',
-    Icon: IcClock,
-    shop: '프리즘네일 홍대',
-    service: '젤네일',
-    price: '45,000원',
-    datetime: '8/12 (수) 14:00',
-    note: '반차 쓰시면 여유롭게 · 대기 없음',
-  },
-]
+const CANDIDATE_ICONS = [IcStar, IcPin, IcClock]
 
 function AgentBubble({ children }) {
   return (
@@ -56,21 +24,86 @@ function AgentBubble({ children }) {
 
 function AgentChat() {
   const navigate = useNavigate()
+  const { analysisId, analysis, schedule, patch } = useFlow()
   const [revealCount, setRevealCount] = useState(0)
   const [selectedId, setSelectedId] = useState(null)
   const [showModal, setShowModal] = useState(false)
+  const [loadError, setLoadError] = useState(null)
+  const [confirmError, setConfirmError] = useState(null)
+  const [confirming, setConfirming] = useState(false)
+  const [attempt, setAttempt] = useState(0)
+
+  // JudgementProcess를 거치지 않고 바로 들어온 경우 대비: 예약 후보가 없으면 여기서 조회한다.
+  useEffect(() => {
+    if (schedule || !analysisId) return undefined
+    let cancelled = false
+    setLoadError(null)
+
+    api
+      .post(`/api/analyses/${analysisId}/schedule`, {})
+      .then(({ data }) => {
+        if (cancelled) return
+        patch({ schedule: data })
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setLoadError(err)
+      })
+
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [analysisId, attempt])
 
   useEffect(() => {
-    if (revealCount >= BLOCKS.length) return undefined
+    if (!schedule || revealCount >= BLOCKS.length) return undefined
     const timer = setTimeout(
       () => setRevealCount((count) => count + 1),
       revealCount === 0 ? 300 : 500,
     )
     return () => clearTimeout(timer)
-  }, [revealCount])
+  }, [schedule, revealCount])
 
   const isVisible = (block) => revealCount > BLOCKS.indexOf(block)
-  const selectedCandidate = CANDIDATES.find((candidate) => candidate.id === selectedId)
+  const candidates = schedule?.candidates ?? []
+  const selectedCandidate = candidates.find((candidate) => candidate.candidateId === selectedId)
+  const reasoningLines = (schedule?.executionLogs ?? [])
+    .filter((log) => log.step > 1)
+    .map((log) => ({
+      fn: log.tool ? `${log.tool}()` : `${log.type.toLowerCase()}()`,
+      result: log.message,
+    }))
+
+  const reversePlan = analysis?.reversePlan
+  const upcomingEvent = analysis?.upcomingEvent
+
+  async function handleConfirm() {
+    if (!selectedCandidate) return
+    setConfirming(true)
+    setConfirmError(null)
+    try {
+      const { data } = await api.post(`/api/bookings/${selectedCandidate.candidateId}/confirm`, {})
+      patch({ selectedCandidate, confirmation: data })
+      navigate('/reserve-complete')
+    } catch (err) {
+      setShowModal(false)
+      setConfirmError(err)
+    } finally {
+      setConfirming(false)
+    }
+  }
+
+  if (!analysisId) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-5">
+        <ErrorBanner error={{ message: '분석 데이터를 찾을 수 없어요. 홈으로 돌아가 다시 시도해주세요.' }} />
+        <button type="button" onClick={() => navigate('/home')} className="text-body6 text-gray60">
+          홈으로
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -82,9 +115,23 @@ function AgentChat() {
       </div>
 
       <div className="flex flex-1 flex-col gap-3 px-5 py-5">
+        {loadError && (
+          <ErrorBanner error={loadError} onRetry={() => setAttempt((prev) => prev + 1)} />
+        )}
+        {confirmError && <ErrorBanner error={confirmError} onRetry={() => setConfirmError(null)} />}
+
+        {!schedule && !loadError && (
+          <AgentBubble>예약 가능한 시간을 찾고 있어요…</AgentBubble>
+        )}
+
         {isVisible('intro') && (
           <AgentBubble>
-            네일 상태 확인했어요. 8월 15일 결혼식까지 고려하면 12~13일이 가장 좋겠어요.
+            네일 상태 확인했어요.{' '}
+            {upcomingEvent
+              ? `${formatMonthDay(upcomingEvent.date)} ${upcomingEvent.title}까지 고려하면`
+              : '관리 주기를 고려하면'}{' '}
+            {reversePlan && formatDateRangeShort(reversePlan.recommendedStart, reversePlan.recommendedEnd)}이
+            가장 좋겠어요.
           </AgentBubble>
         )}
 
@@ -95,8 +142,8 @@ function AgentChat() {
               슬슬이 확인하는 중
             </p>
             <div className="flex flex-col gap-1.5">
-              {REASONING_LINES.map(({ fn, result }) => (
-                <p key={fn} className="text-caption3 font-mono">
+              {reasoningLines.map(({ fn, result }, index) => (
+                <p key={`${fn}-${index}`} className="text-caption3 font-mono">
                   <span className="text-orange60">{fn}</span>
                   <span className="text-gray70"> → {result}</span>
                 </p>
@@ -111,26 +158,27 @@ function AgentChat() {
 
         {isVisible('candidates') && (
           <div className="flex flex-col gap-3">
-            {CANDIDATES.map(({ id, Icon, shop, price, datetime, note }, index) => {
-              const isSelected = selectedId === id
+            {candidates.map((candidate, index) => {
+              const Icon = CANDIDATE_ICONS[index % CANDIDATE_ICONS.length]
+              const isSelected = selectedId === candidate.candidateId
               return (
                 <button
-                  key={id}
+                  key={candidate.candidateId}
                   type="button"
-                  onClick={() => setSelectedId(id)}
+                  onClick={() => setSelectedId(candidate.candidateId)}
                   style={{ animationDelay: `${index * 100}ms` }}
                   className={`animate-chat-in w-full rounded-2xl border p-4 text-left ${
                     isSelected ? 'border-orange50 bg-orange10' : 'border-gray30'
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <p className="text-body4 text-gray90">{shop}</p>
-                    <p className="text-body4 text-gray90">{price}</p>
+                    <p className="text-body4 text-gray90">{candidate.shop}</p>
+                    <p className="text-body4 text-gray90">{candidate.price.toLocaleString('ko-KR')}원</p>
                   </div>
-                  <p className="text-caption2 text-gray60 mt-1">{datetime}</p>
+                  <p className="text-caption2 text-gray60 mt-1">{formatDateTimeKR(candidate.start)}</p>
                   <p className="text-caption2 text-gray60 mt-1 flex items-center gap-1">
                     <Icon className="text-orange50 h-3.5 w-3.5 shrink-0" />
-                    {note}
+                    {candidate.recommendationReason}
                   </p>
                 </button>
               )
@@ -159,9 +207,9 @@ function AgentChat() {
 
             <div className="bg-gray10 mt-4 rounded-2xl p-4 text-center">
               <p className="text-body3 text-gray90">{selectedCandidate.shop}</p>
-              <p className="text-caption2 text-gray60 mt-1">{selectedCandidate.datetime}</p>
+              <p className="text-caption2 text-gray60 mt-1">{formatDateTimeKR(selectedCandidate.start)}</p>
               <p className="text-caption2 text-gray60 mt-0.5">
-                {selectedCandidate.service} · {selectedCandidate.price}
+                {selectedCandidate.service} · {selectedCandidate.price.toLocaleString('ko-KR')}원
               </p>
             </div>
 
@@ -173,20 +221,14 @@ function AgentChat() {
             </div>
 
             <div className="mt-4">
-              <LongButton
-                onClick={() => {
-                  const { shop, service, price, datetime } = selectedCandidate
-                  navigate('/reserve-complete', {
-                    state: { candidate: { shop, service, price, datetime } },
-                  })
-                }}
-              >
-                예약하기
+              <LongButton disabled={confirming} onClick={handleConfirm}>
+                {confirming ? '예약하는 중…' : '예약하기'}
               </LongButton>
             </div>
             <button
               type="button"
               onClick={() => setShowModal(false)}
+              disabled={confirming}
               className="text-body6 text-gray60 mt-3 w-full text-center"
             >
               다시 고를래요

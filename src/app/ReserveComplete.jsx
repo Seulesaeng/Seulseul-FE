@@ -1,19 +1,22 @@
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import LongButton from '@/components/button/LongButton'
 import IcCheck from '@/assets/icons/ic_check_bold_24.svg?react'
 import IcCircle from '@/assets/icons/ic_circle_24.svg?react'
-
-const DEFAULT_CANDIDATE = {
-  shop: '프리즘네일 홍대',
-  datetime: '8월 12일 (수) 19:00',
-  service: '젤네일',
-  price: '45,000원',
-}
+import { useFlow } from '@/context/FlowContext'
+import { formatDateTimeKR } from '@/lib/date'
 
 function ReserveComplete() {
   const navigate = useNavigate()
-  const location = useLocation()
-  const candidate = location.state?.candidate ?? DEFAULT_CANDIDATE
+  const { confirmation } = useFlow()
+
+  if (!confirmation) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-5">
+        <p className="text-body3 text-gray60">예약 정보를 찾을 수 없어요.</p>
+        <LongButton onClick={() => navigate('/home')}>홈으로</LongButton>
+      </div>
+    )
+  }
 
   return (
     <div className="flex min-h-screen flex-col px-5 pt-24 pb-8">
@@ -25,17 +28,19 @@ function ReserveComplete() {
       </div>
 
       <div className="border-gray30 mt-8 rounded-2xl border p-4">
-        <p className="text-body3 text-gray90">{candidate.shop}</p>
-        <p className="text-caption2 text-gray60 mt-1">{candidate.datetime}</p>
+        <p className="text-body3 text-gray90">{confirmation.shop}</p>
+        <p className="text-caption2 text-gray60 mt-1">{formatDateTimeKR(confirmation.start)}</p>
         <p className="text-caption2 text-gray60 mt-0.5">
-          {candidate.service} · {candidate.price}
+          {confirmation.service} · {confirmation.price.toLocaleString('ko-KR')}원
         </p>
 
         <div className="border-gray20 my-3 border-t" />
 
         <p className="text-caption2 text-gray90 flex items-center gap-1.5">
           <IcCheck className="text-gray70 h-3.5 w-3.5 shrink-0" />
-          Google 캘린더에 추가했어요
+          {confirmation.calendarEvent.created
+            ? 'Google 캘린더에 추가했어요'
+            : '예약이 확정됐어요 (캘린더 연동은 데모 모드예요)'}
         </p>
         <p className="text-caption2 text-gray90 mt-1.5 flex items-center gap-1.5">
           <IcCheck className="text-gray70 h-3.5 w-3.5 shrink-0" />
