@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import ShortButton from '@/components/button/ShortButton'
 import LongButton from '@/components/button/LongButton'
 
@@ -6,6 +7,7 @@ const GENDER_OPTIONS = ['여성', '남성', '선택하지 않음']
 const AGE_OPTIONS = ['10대', '20대', '30대', '40대', '50대', '60대']
 
 function Profile() {
+  const navigate = useNavigate()
   const [gender, setGender] = useState(null)
   const [ageGroup, setAgeGroup] = useState(null)
 
@@ -48,7 +50,9 @@ function Profile() {
         </section>
       </div>
 
-      <LongButton disabled={!isValid}>다음</LongButton>
+      <LongButton disabled={!isValid} onClick={() => navigate('/onboarding/care-select')}>
+        다음
+      </LongButton>
     </div>
   )
 }

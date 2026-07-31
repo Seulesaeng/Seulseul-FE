@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import LongButton from '@/components/button/LongButton'
 import CareLimitSheet from './CareLimitSheet'
 import IcBack from '@/assets/icons/ic_back_24.svg?react'
@@ -28,6 +29,7 @@ const CARE_OPTIONS = [
 ]
 
 function CareSelect() {
+  const navigate = useNavigate()
   const [selected, setSelected] = useState([])
   const [showLimitSheet, setShowLimitSheet] = useState(false)
 
@@ -44,7 +46,7 @@ function CareSelect() {
 
   return (
     <div className="flex min-h-screen flex-col px-5 pt-16 pb-8">
-      <button type="button">
+      <button type="button" onClick={() => navigate(-1)}>
         <IcBack className="text-gray90 h-6 w-6" />
       </button>
 
@@ -91,7 +93,12 @@ function CareSelect() {
       </p>
 
       <div className="mt-auto pt-8">
-        <LongButton disabled={selected.length === 0}>다음</LongButton>
+        <LongButton
+          disabled={selected.length === 0}
+          onClick={() => navigate('/onboarding/permission')}
+        >
+          다음
+        </LongButton>
       </div>
 
       {showLimitSheet && (
