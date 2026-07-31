@@ -26,8 +26,8 @@ function Permission() {
   return (
     <div className="flex min-h-screen flex-col px-6 pt-9 pb-8">
       <h1 className="text-title2 text-gray90">슬슬이 대신 지켜볼게요</h1>
-      <p className="text-body4 text-gray60">
-        두 가지만 허락해 주시면, 그 다음부터는\n화연님이 아무것도 안 하셔도 돼요
+      <p className="text-body4 text-gray60 mt-1">
+        두 가지만 허락해 주시면, 그 다음부터는<br />화연님이 아무것도 안 하셔도 돼요
       </p>
 
       <div className="mt-8 flex flex-col gap-2">
