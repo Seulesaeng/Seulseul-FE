@@ -15,7 +15,8 @@ import ReserveComplete from '@/app/ReserveComplete'
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
+      <Route path="/" element={<Profile />} />
+      <Route path="/home" element={<Home />} />
       <Route path="/onboarding/profile" element={<Profile />} />
       <Route path="/onboarding/care-select" element={<CareSelect />} />
       <Route path="/onboarding/permission" element={<Permission />} />

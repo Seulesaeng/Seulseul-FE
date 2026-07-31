@@ -79,7 +79,7 @@ function ScanResult() {
       </section>
 
       <div className="mt-auto pt-8">
-        <LongButton onClick={() => navigate('/')}>시작하기</LongButton>
+        <LongButton onClick={() => navigate('/home')}>시작하기</LongButton>
       </div>
     </div>
   )

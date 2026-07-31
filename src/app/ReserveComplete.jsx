@@ -54,7 +54,7 @@ function ReserveComplete() {
       </div>
 
       <div className="mt-auto pt-8">
-        <LongButton onClick={() => navigate('/')}>홈으로</LongButton>
+        <LongButton onClick={() => navigate('/home')}>홈으로</LongButton>
       </div>
     </div>
   )
