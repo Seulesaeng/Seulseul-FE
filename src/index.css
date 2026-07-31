@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css';
 
 @theme {
   --color-orange10: #FFF2EB;
@@ -18,5 +19,40 @@
   --color-gray80: #1E293B;
   --color-gray90: #0E172A;
   --color-gray100: #020617;
-  
+
+  --font-sans: 'Pretendard Variable', sans-serif;
+
+  --text-display: 2rem;
+  --text-display--font-weight: 700;
+  --text-title1: 1.75rem;
+  --text-title1--font-weight: 700;
+  --text-title2: 1.5rem;
+  --text-title2--font-weight: 700;
+  --text-title3: 1.25rem;
+  --text-title3--font-weight: 600;
+  --text-body1: 1rem;
+  --text-body1--font-weight: 700;
+  --text-body2: 1rem;
+  --text-body2--font-weight: 400;
+  --text-body3: .875rem;
+  --text-body3--font-weight: 600;
+  --text-body4: .875rem;
+  --text-body4--font-weight: 500;
+  --text-body5: .75rem;
+  --text-body5--font-weight: 600;
+  --text-body6: .75rem;
+  --text-body6--font-weight: 500;
+  --text-caption1: .875rem;
+  --text-caption1--font-weight: 400;
+  --text-caption2: .75rem;
+  --text-caption2--font-weight: 400;
+  --text-caption3: .6875rem;
+  --text-caption3--font-weight: 400;
+}
+
+@layer base {
+  html {
+    line-height: 160%;
+    letter-spacing: 0%;
+  }
 }
