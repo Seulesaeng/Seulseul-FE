@@ -184,7 +184,7 @@ function Home() {
       {error && <ErrorBanner error={error} onRetry={() => setAttempt((prev) => prev + 1)} className="mx-6 mb-4" />}
 
       <div className="px-6">
-        <h1 className="text-title3 font-extrabold text-gray90">안녕하세요, 화연님</h1>
+        <h1 className="text-title3 font-extrabold text-gray90 mt-5">안녕하세요, 화연님</h1>
         <p className="text-body2 text-gray60 mt-0.5">
           오늘 예약하면 좋을 관리가{' '}
           <span className="text-orange50 text-body1">{analysis?.canSchedule ? '1개' : '0개'}</span>{' '}
@@ -200,7 +200,7 @@ function Home() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             <IcCalendar className="text-gray60 h-4 w-4" />
-            <span className="text-caption2 text-gray60">Google 캘린더 연동됨</span>
+            <span className="text-caption2 text-gray50">Google 캘린더 연동됨</span>
           </div>
           <div className="bg-gray10 flex rounded-full p-0.5">
             <span
@@ -222,7 +222,7 @@ function Home() {
 
         {mode === 'week' ? (
           <div className="mt-3">
-            <p className="text-body4 text-gray90">8월 둘째 주</p>
+            <p className="text-body1 text-gray90">8월 둘째 주</p>
             <div className="mt-2 grid grid-cols-7 gap-1">
               {WEEK_DAYS.map((date, index) => (
                 <div key={date} className="flex flex-col items-center gap-1">
@@ -239,7 +239,7 @@ function Home() {
           </div>
         ) : (
           <div className="mt-3">
-            <p className="text-body3 text-gray90 text-center">2026년 8월</p>
+            <p className="text-body1 text-gray90">2026년 8월</p>
             <div className="mt-3 grid grid-cols-7 gap-y-2 text-center">
               {WEEKDAY_LABELS.map((label) => (
                 <span key={label} className="text-caption3 text-gray50">
@@ -277,7 +277,7 @@ function Home() {
       </button>
 
       <div className="mt-6 px-5">
-        <h2 className="text-body3 text-gray90 mb-3">지금 하고 있는 관리</h2>
+        <h2 className="text-title3 font-extrabold text-gray90 mb-3">지금 하고 있는 관리</h2>
         <div className="flex flex-col gap-2">
           {loading && !analysis && (
             <div className="border-gray30 rounded-2xl border p-3 text-center">

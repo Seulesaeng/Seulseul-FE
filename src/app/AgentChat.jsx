@@ -107,7 +107,7 @@ function AgentChat() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <div className="flex items-center gap-2 px-5 pt-16">
+      <div className="flex items-center gap-2 px-5 pt-4">
         <button type="button" onClick={() => navigate(-1)}>
           <IcBack className="text-gray90 h-6 w-6" />
         </button>

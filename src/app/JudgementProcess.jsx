@@ -9,12 +9,13 @@ import ErrorBanner from '@/components/ErrorBanner'
 import { formatMonthDay } from '@/lib/date'
 
 const EVIDENCE_STEP_TITLES = {
-  1: '사진첩 훑기',
-  2: '상태 측정',
-  3: '주기 계산',
-  4: '관리 시점 판단',
-  5: '일정 확인',
-  6: '역방향 일정 계산',
+  1: '사진 정렬',
+  2: '사진첩 훑기',
+  3: '상태 측정',
+  4: '주기 계산',
+  5: '관리 시점 판단',
+  6: '일정 확인',
+  7: '역방향 일정 계산', 
 }
 
 function ResultPreview({ result }) {
@@ -101,7 +102,7 @@ function JudgementProcess() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col px-5 pt-16 pb-8">
+    <div className="flex min-h-screen flex-col px-5 pt-4 pb-8">
       <div className="flex items-center gap-2">
         <button type="button" onClick={() => navigate(-1)}>
           <IcBack className="text-gray90 h-6 w-6" />

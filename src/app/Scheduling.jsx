@@ -38,7 +38,7 @@ function Scheduling() {
   const timeline = [MOCK_DYE_STEP, nailStep, eventStep].filter(Boolean)
 
   return (
-    <div className="flex min-h-screen flex-col px-5 pt-16 pb-8">
+    <div className="flex min-h-screen flex-col px-5 pt-4 pb-8">
       <div className="flex items-center gap-2">
         <button type="button" onClick={() => navigate(-1)}>
           <IcBack className="text-gray90 h-6 w-6" />
