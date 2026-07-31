@@ -57,14 +57,14 @@ const CARD_BORDER_CLASS = {
 }
 
 const ICON_TONE_CLASS = {
-  urgent: 'bg-orange10 text-orange50',
+  urgent: 'bg-orange20 text-orange70',
   soon: 'bg-orange10 text-orange50',
   later: 'bg-gray10 text-gray40',
 }
 
 const STATUS_BADGE_CLASS = {
   urgent: 'bg-orange50 text-gray0',
-  soon: 'bg-orange10 text-orange50',
+  soon: 'bg-orange10 text-orange70',
   later: 'bg-gray30 text-gray60',
 }
 
@@ -81,7 +81,6 @@ function getMonthMatrix(year, monthIndex) {
 
 function getDateClass(date) {
   if (date === TODAY) return 'bg-orange50 text-gray0'
-  if (EVENT_DAYS[date] === 'reservation') return 'text-orange50'
   return 'text-gray90'
 }
 
@@ -101,9 +100,8 @@ function Home() {
 
   return (
     <div className="min-h-screen pb-10">
-      <header className="flex items-center justify-between px-5 pt-4">
-        <div className="flex items-center gap-1.5">
-          <span className="bg-orange50 h-5 w-5 rounded-md" />
+      <header className="flex items-center justify-between px-6 py-4">
+        <div className="flex items-center">
           <span
             className="text-gray90 font-extrabold"
             style={{
@@ -116,7 +114,7 @@ function Home() {
             슬슬
           </span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <button type="button" onClick={() => navigate('/log')}>
             <IcList className="text-gray70 h-6 w-6" />
           </button>
@@ -127,25 +125,25 @@ function Home() {
       </header>
 
       <div
-        className="relative mx-5 mt-4 overflow-hidden rounded-3xl bg-cover bg-right p-5"
+        className="relative overflow-hidden bg-cover bg-right p-5"
         style={{ backgroundImage: `url(${bannerBg})` }}
       >
-        <p className="text-body3 text-gray90">자기관리에 진심인 갓생러 주목</p>
-        <p className="text-caption2 text-gray70 mt-1">관리 루틴 둘러보기 →</p>
-        <span className="text-caption3 text-gray60 absolute right-4 bottom-3">1/2</span>
+        <p className="text-title2 text-gray90">자기관리에 진심인<br /><span className="text-orange50">갓생러</span> 주목</p>
+        <p className="text-caption2 font-bold text-gray70 mt-3.5">관리 루틴 등록하기 →</p>
+        <span className="bg-orange10 text-caption2 font-semibold text-orange70 absolute right-4 bottom-3.5 px-2.5 py-1 rounded-full">1/2</span>
       </div>
 
-      <div className="bg-orange10 mx-5 mt-3 rounded-2xl px-4 py-3">
-        <p className="text-caption2 text-orange70 flex items-center gap-1.5">
-          <span className="bg-orange50 h-1.5 w-1.5 shrink-0 rounded-full" />
+      <div className="bg-orange10 mx-6 my-5 rounded-[10px] p-3">
+        <p className="text-caption2 font-bold text-orange70 flex items-center gap-2">
+          <span className="bg-orange50 h-2 w-2 shrink-0 rounded-full" />
           밤사이 사진 34장을 확인했어요 · 03:12
         </p>
       </div>
 
-      <div className="mt-5 px-5">
-        <h1 className="text-title3 text-gray90">안녕하세요, 화연님</h1>
-        <p className="text-caption1 text-gray60 mt-1">
-          오늘 예약하면 좋을 관리가 <span className="text-orange50 font-semibold">1개</span>{' '}
+      <div className="px-6">
+        <h1 className="text-title3 font-extrabold text-gray90">안녕하세요, 화연님</h1>
+        <p className="text-body2 text-gray60 mt-0.5">
+          오늘 예약하면 좋을 관리가 <span className="text-orange50 text-body1">1개</span>{' '}
           있어요
         </p>
       </div>
