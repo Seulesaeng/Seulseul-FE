@@ -83,8 +83,12 @@ function Scheduling() {
       </div>
 
       <div className="mt-auto pt-8">
-        <LongButton>두 개 한번에 잡기</LongButton>
-        <button type="button" className="text-body6 text-gray60 mt-3 w-full text-center">
+        <LongButton onClick={() => navigate('/agent-chat')}>두 개 한번에 잡기</LongButton>
+        <button
+          type="button"
+          onClick={() => navigate('/agent-chat')}
+          className="text-body6 text-gray60 mt-3 w-full text-center"
+        >
           네일만 잡을래요
         </button>
       </div>

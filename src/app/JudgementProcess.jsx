@@ -154,7 +154,7 @@ function JudgementProcess() {
       </div>
 
       <div className="mt-auto pt-8">
-        <LongButton>그럼 예약 잡아줘</LongButton>
+        <LongButton onClick={() => navigate('/agent-chat')}>그럼 예약 잡아줘</LongButton>
       </div>
     </div>
   )

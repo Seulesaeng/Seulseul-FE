@@ -1,6 +1,6 @@
 import { Route, Routes } from 'react-router-dom'
 import Home from '@/app/Home'
-import Chat from '@/app/Chat'
+import AgentChat from '@/app/AgentChat'
 import My from '@/app/My'
 import Profile from './app/Onboarding/Profile'
 import CareSelect from './app/Onboarding/CareSelect'
@@ -22,7 +22,7 @@ function App() {
       <Route path="/onboarding/scan-result" element={<ScanResult />} />
       <Route path="/judgement-process" element={<JudgementProcess />} />
       <Route path="/scheduling" element={<Scheduling />} />
-      <Route path="/chat" element={<Chat />} />
+      <Route path="/agent-chat" element={<AgentChat />} />
       <Route path="/reserve-complete" element={<ReserveComplete />} />
       <Route path="/my" element={<My />} />
     </Routes>
