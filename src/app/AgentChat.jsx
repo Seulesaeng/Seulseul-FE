@@ -173,7 +173,16 @@ function AgentChat() {
             </div>
 
             <div className="mt-4">
-              <LongButton onClick={() => navigate('/reserve-complete')}>예약하기</LongButton>
+              <LongButton
+                onClick={() => {
+                  const { shop, service, price, datetime } = selectedCandidate
+                  navigate('/reserve-complete', {
+                    state: { candidate: { shop, service, price, datetime } },
+                  })
+                }}
+              >
+                예약하기
+              </LongButton>
             </div>
             <button
               type="button"

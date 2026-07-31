@@ -117,7 +117,7 @@ function Home() {
           </span>
         </div>
         <div className="flex items-center gap-3">
-          <button type="button">
+          <button type="button" onClick={() => navigate('/log')}>
             <IcList className="text-gray70 h-6 w-6" />
           </button>
           <button type="button">

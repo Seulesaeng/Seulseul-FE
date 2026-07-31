@@ -9,6 +9,7 @@ import Scanning from './app/Onboarding/Scanning'
 import ScanResult from './app/Onboarding/ScanResult'
 import JudgementProcess from '@/app/JudgementProcess'
 import Scheduling from '@/app/Scheduling'
+import Log from '@/app/Log'
 import ReserveComplete from '@/app/ReserveComplete'
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
       <Route path="/judgement-process" element={<JudgementProcess />} />
       <Route path="/scheduling" element={<Scheduling />} />
       <Route path="/agent-chat" element={<AgentChat />} />
+      <Route path="/log" element={<Log />} />
       <Route path="/reserve-complete" element={<ReserveComplete />} />
       <Route path="/my" element={<My />} />
     </Routes>
